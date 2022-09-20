@@ -1,5 +1,7 @@
 using HotelListing2.Configurations;
 using HotelListing2.Data;
+using HotelListing2.IRepository;
+using HotelListing2.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -43,12 +45,16 @@ namespace HotelListing2
 
             services.AddAutoMapper(typeof(MapperInitializer));
 
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListing", Version = "v1" });
             });
 
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(op =>
+            op.SerializerSettings.ReferenceLoopHandling =
+                Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
         }
 
@@ -73,6 +79,10 @@ namespace HotelListing2
 
             app.UseEndpoints(endpoints =>
             {
+              /* //instead of this we will use attribute called Routing 
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{Controller=Home}/{action=Index}/{id?}");*/
                 endpoints.MapControllers();
             });
         }

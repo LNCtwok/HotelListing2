@@ -43,7 +43,8 @@ namespace HotelListing2.Repository
                 }
             }
             
-            return await query.AsNoTracking().FirstOrDefaultAsync(expression);
+
+            return await query.AsNoTracking().FirstOrDefaultAsync(expression);//look in the query takoff the tracking and return the first record that matches the expression
 
         }
 
