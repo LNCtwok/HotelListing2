@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing2.IRepository;
 using HotelListing2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,8 @@ namespace HotelListing2.Controllers
             _mapper = mapper;
         }
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotels()
         {
             try
@@ -42,7 +45,11 @@ namespace HotelListing2.Controllers
                 return StatusCode(500, "Internal server error please try again later");
             }
         }
+       
+        [Authorize]
         [HttpGet("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotel(int id)
         {
             try

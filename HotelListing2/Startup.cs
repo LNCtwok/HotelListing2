@@ -1,10 +1,13 @@
+using AutoMapper;
 using HotelListing2.Configurations;
 using HotelListing2.Data;
 using HotelListing2.IRepository;
 using HotelListing2.Repository;
+using HotelListing2.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,16 +39,22 @@ namespace HotelListing2
                 options.UseSqlServer(Configuration.GetConnectionString("sqlConnection"))
             );
 
+
+            services.AddAuthentication();
+            
+            services.ConfigureIdentity();
+            services.ConfigureJWT(Configuration);
+
             services.AddCors(o => {
                 o.AddPolicy("AllowAll", builder =>
                     builder.AllowAnyOrigin()
                     .AllowAnyMethod()
                     .AllowAnyHeader());
             });
-
             services.AddAutoMapper(typeof(MapperInitializer));
-
+            
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IAuthManager, AuthManager>();
 
             services.AddSwaggerGen(c =>
             {
@@ -53,8 +62,8 @@ namespace HotelListing2
             });
 
             services.AddControllers().AddNewtonsoftJson(op =>
-            op.SerializerSettings.ReferenceLoopHandling =
-                Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+                op.SerializerSettings.ReferenceLoopHandling =
+                    Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
         }
 
@@ -75,14 +84,11 @@ namespace HotelListing2
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-              /* //instead of this we will use attribute called Routing 
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{Controller=Home}/{action=Index}/{id?}");*/
                 endpoints.MapControllers();
             });
         }
