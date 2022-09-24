@@ -18,7 +18,7 @@ namespace HotelListing2.IRepository
         Task Insert(T entity);
         Task InsertRange(IEnumerable<T> entities);
         Task Delete(int id);
-        void Deleteange(IEnumerable<T> entities);
+        void DeleteRange(IEnumerable<T> entities);
         void Update(T entity);
     }
 }

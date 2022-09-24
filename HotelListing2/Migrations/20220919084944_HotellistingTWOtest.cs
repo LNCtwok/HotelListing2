@@ -39,7 +39,7 @@ namespace HotelListing2.Migrations
                         column: x => x.CountryId,
                         principalTable: "Countries",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade);//Cascade means if parent deleted childerns will be deleted too, ristrict means don't delete any of them, noAction probebly keeping the childrens
                 });
 
             migrationBuilder.CreateIndex(

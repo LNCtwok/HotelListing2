@@ -19,7 +19,7 @@ namespace HotelListing2.Repository
         public IGenericRepository<Country> Countries => _countries ??= new GenericRepository<Country>(_context);//if _countries is null then do...
 
         public IGenericRepository<Hotel> Hotels => _hotels ??= new GenericRepository<Hotel>(_context);
-
+        
         public void Dispose()
         {
             _context.Dispose();//putting the connections in trash

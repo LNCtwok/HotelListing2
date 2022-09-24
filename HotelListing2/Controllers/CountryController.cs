@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using HotelListing2.Data;
 using HotelListing2.IRepository;
 using HotelListing2.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -43,7 +45,8 @@ namespace HotelListing2.Controllers
                 return StatusCode(500, "Internal server error please try again later");
             }
         }
-        [HttpGet("{id:int}")]
+
+        [HttpGet("{id:int}", Name = "GetCountry")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountry(int id)
@@ -61,5 +64,101 @@ namespace HotelListing2.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator")]
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateCountry([FromBody] CreateCountryDTO countryDTO)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError($"Invalid post attempt in {nameof(CreateCountry)}");
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var country = _mapper.Map<Country>(countryDTO);
+                await _unitOfWork.Countries.Insert(country);
+                await _unitOfWork.Save();
+
+                return CreatedAtRoute("GetCountry", new { id = country.Id }, country);//routeName,routeValue,value
+              
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,$"Something went wrong {nameof(CreateCountry)}");
+                return StatusCode(500, "Internal server error please try again later");
+            }
+        }
+        
+        [Authorize]
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCountry(int id, [FromBody] UpdateCountryDTO countryDTO)
+        {
+            if(!ModelState.IsValid || id < 0)
+            {
+                _logger.LogError($"Invalid update attempt in {nameof(UpdateCountry)}");
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var country = await _unitOfWork.Countries.Get(q => q.Id == id);
+                if(country == null)
+                {
+                    _logger.LogError($"Invalid update attempt in the {nameof(UpdateCountry)}");
+                    return BadRequest("Submitted data is invalid");
+                }
+                 _mapper.Map(countryDTO, country);
+                _unitOfWork.Countries.Update(country);
+                
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Something went wrong in the {nameof(UpdateCountry)}");
+                return StatusCode(500, "Internal server error please try again later");
+            }
+        }
+        [Authorize(Roles = "Administrator")]
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteCountry(int id)
+        {
+            if (id < 1)
+            {
+                _logger.LogError($"Invalid Delete attempt in {nameof(DeleteCountry)}");
+                return BadRequest("Submitted data is invalid");
+            }
+
+            try
+            {
+                var country =await _unitOfWork.Countries.Get(q => q.Id == id);
+                if (country == null)
+                {
+                    _logger.LogError($"Invalid delete attempt in {nameof(DeleteCountry)}");
+                    return BadRequest("Submitted data is invalid");
+                }
+                await _unitOfWork.Countries.Delete(id);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Something went wrong in the {nameof(DeleteCountry)}");
+                return StatusCode(500, "Something went wrong please try again later");
+            }
+        }
     }
 }

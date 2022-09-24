@@ -27,7 +27,7 @@ namespace HotelListing2.Repository
             _db.Remove(entity);
         }
 
-        public void Deleteange(IEnumerable<T> entities)
+        public void DeleteRange(IEnumerable<T> entities)
         {
             _db.RemoveRange(entities);
         }
