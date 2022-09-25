@@ -28,23 +28,15 @@ namespace HotelListing2.Controllers
             _logger = logger;
             _mapper = mapper;
         }
+
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetHotels()
+        public async Task<IActionResult> GetHotels([FromQuery] RequestParams requestParams)
         {
-            try
-            {
-                var hotels = await _unitOfWork.Hotels.GetAll();
-                var results = _mapper.Map<IList<HotelDTO>>(hotels);
-                return Ok(results);
-
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Something went wrong {nameof(GetHotels)}");
-                return StatusCode(500, "Internal server error please try again later");
-            }
+            var hotels = await _unitOfWork.Hotels.GetAll(requestParams);
+            var results = _mapper.Map<IList<HotelDTO>>(hotels);
+            return Ok(results);
         }
        
         [HttpGet("{id:int}", Name = "GetHotel" )]//this is your name when a sibling calls you
@@ -52,17 +44,10 @@ namespace HotelListing2.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotel(int id)
         {
-            try
-            {
-                var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id, new List<string> {"Country"});
-                var result = _mapper.Map<HotelDTO>(hotel);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Something went wrong{nameof(GetHotel)}");
-                return StatusCode(500, "Internal server error please try again later");
-            }
+             var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id, new List<string> {"Country"});
+             var result = _mapper.Map<HotelDTO>(hotel);
+             return Ok(result);
+           
         }
 
         [Authorize(Roles = "Administrator")]
@@ -78,19 +63,11 @@ namespace HotelListing2.Controllers
                 _logger.LogError($"Invalid post attempt in {nameof(CreateHotel)}");
                 return BadRequest(ModelState);
             }
-            try
-            {
-                var hotel = _mapper.Map<Hotel>(hotelDTO);
-                await _unitOfWork.Hotels.Insert(hotel);
-                await _unitOfWork.Save();
+            var hotel = _mapper.Map<Hotel>(hotelDTO);
+            await _unitOfWork.Hotels.Insert(hotel);
+            await _unitOfWork.Save();
 
-                return CreatedAtRoute("GetHotel",new { id = hotel.Id }, hotel);//returns the created object for the client
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Something went wrong{nameof(CreateHotel)}");
-                return StatusCode(500, "Internal server error please try again later");
-            }
+            return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);//returns the created object for the client
         }
 
         [Authorize]
@@ -106,26 +83,19 @@ namespace HotelListing2.Controllers
                 _logger.LogError($"Invalid update attempt in {nameof(UpdateHotle)}");
                 return BadRequest(ModelState);
             }
-            try
+            var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+            if (hotel == null)
             {
-                var hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
-                if(hotel == null)
-                {
-                    _logger.LogError($"Invalid update attempt in {nameof(UpdateHotle)}");
-                    return BadRequest("Submitted data is invalid");
-                }
-                _mapper.Map(hotelDTO, hotel);//source, destination: so take the feilds from the source and if there is any unequaled data update the feilds and that means the missing feilds from the sorce will be put to null
-                //because we're not tracking then we don't put a save in here
-                _unitOfWork.Hotels.Update(hotel);
-                await _unitOfWork.Save();
+                _logger.LogError($"Invalid update attempt in {nameof(UpdateHotle)}");
+                return BadRequest("Submitted data is invalid");
+            }
+            _mapper.Map(hotelDTO, hotel);//source, destination: so take the feilds from the source and if there is any unequaled data update the feilds and that means the missing feilds from the sorce will be put to null
+                                         //because we're not tracking then we don't put a save in here
+            _unitOfWork.Hotels.Update(hotel);
+            await _unitOfWork.Save();
 
-                return NoContent();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Something went wrong in the {nameof(UpdateHotle)}");
-                return StatusCode(500, "Internal server error please try again later");
-            }
+            return NoContent();
+
         }
 
         [Authorize(Roles ="Administrator")]
@@ -142,8 +112,6 @@ namespace HotelListing2.Controllers
                 return BadRequest("Submitted data is invalid");
             }
 
-            try
-            {
                 var hotel =await _unitOfWork.Hotels.Get(q => q.Id == id);
                 if (hotel == null)
                 {
@@ -154,12 +122,6 @@ namespace HotelListing2.Controllers
                 await _unitOfWork.Save();
 
                 return NoContent();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Something went wrong in the {nameof(DeleteHotel)}");
-                return StatusCode(500, "Something went wrong please try again later");
-            }
         }
     }
 }
